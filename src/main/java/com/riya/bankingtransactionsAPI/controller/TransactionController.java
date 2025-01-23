@@ -35,14 +35,20 @@ public class TransactionController {
     public ResponseEntity<List<TransactionHistoryResponseDTO>> getTransactionHistory(@PathVariable Long accountId) {
         List<TransactionHistoryResponseDTO> response = transactionService.getTransactionHistory(accountId)
                 .stream()
-                .map(transaction -> new TransactionHistoryResponseDTO(
-                        transaction.getTransactionId(),
-                        transaction.getCounterAccountId(),
-                        transaction.getAmount(),
-                        transaction.getUpdatedBalance(),
-                        transaction.getTransactionType(),
-                        transaction.getTransactionTime()
-                )).collect(Collectors.toList());
-        return new ResponseEntity<>(response,HttpStatus.OK);
+                .map(transaction -> TransactionHistoryResponseDTO.builder()
+                        .transactionId(transaction.getTransactionId())
+                        .senderEmail(transaction.getSenderEmail())
+                        .receiverEmail(transaction.getReceiverEmail())
+                        .amount(transaction.getAmount())
+                        .senderBalance(transaction.getSenderBalance())
+                        .receiverBalance(transaction.getReceiverBalance())
+                        .transactionType(transaction.getTransactionType())
+                        .timeStamp(transaction.getTransactionTime())
+                        .status(transaction.getStatus())
+                        .remarks(transaction.getRemarks())
+                        .build()
+                ).collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
     }
 }

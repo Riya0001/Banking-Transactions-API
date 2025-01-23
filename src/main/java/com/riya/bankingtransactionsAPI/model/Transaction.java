@@ -23,35 +23,52 @@ public class Transaction {
     private Long id;
 
     @Column(name = "accountId", nullable = false)
-    private Long accountId;  // current account id foe which transaction occured
+    private Long accountId;
 
-    @Column(name = "counterAccountId", nullable = false)
-    private Long counterAccountId; // The account to which amount is deposited
+    @Column(name = "sender_email", nullable = false)
+    private String senderEmail;  // Sender's email address
+
+    @Column(name = "receiver_email", nullable = false)
+    private String receiverEmail;  // Receiver's email address
 
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
-    @Column(name = "updatedBalance", nullable = false)
-    private BigDecimal updatedBalance;  // updated balance after transaction
+    @Column(name = "sender_balance", nullable = false)
+    private BigDecimal senderBalance;  // Sender's balance after transaction
+
+    @Column(name = "receiver_balance", nullable = false)
+    private BigDecimal receiverBalance;  // Receiver's balance after transaction
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "transactionType", nullable = false)
+    @Column(name = "transaction_type", nullable = false)
     private TransactionType transactionType;
 
-    @Column(name = "transactionId", nullable = false)
+    @Column(name = "transaction_id", nullable = false, updatable = false)
     private UUID transactionId;
 
-    @Column(name = "transactionTime", nullable = false)
+    @Column(name = "transaction_time", nullable = false)
     private LocalDateTime transactionTime;
 
-    public Transaction(Long accountId, Long counterAccountId, TransactionType transactionType, BigDecimal amount, UUID transactionId, BigDecimal updatedBalance) {
-        this.accountId = accountId;
-        this.counterAccountId = counterAccountId;
-        this.amount = amount;
-        this.updatedBalance = updatedBalance;
-        this.transactionType = transactionType;
-        this.transactionId = transactionId;
-        this.transactionTime = LocalDateTime.now();
-    }
+    @Column(name = "status")
+    private String status;
 
+    @Column(name = "remarks")
+    private String remarks;
+
+    public Transaction(Long accountId, String senderEmail, String receiverEmail, TransactionType transactionType,
+                       BigDecimal amount, UUID transactionId, BigDecimal senderBalance, BigDecimal receiverBalance,
+                       String status, String remarks) {
+        this.accountId = accountId;
+        this.senderEmail = senderEmail;
+        this.receiverEmail = receiverEmail;
+        this.amount = amount;
+        this.senderBalance = senderBalance;
+        this.receiverBalance = receiverBalance;
+        this.transactionType = transactionType;
+        this.transactionId = (transactionId != null) ? transactionId : UUID.randomUUID();
+        this.transactionTime = LocalDateTime.now();
+        this.status = (status != null) ? status : "PENDING";
+        this.remarks = (remarks != null) ? remarks : "No remarks provided";
+    }
 }

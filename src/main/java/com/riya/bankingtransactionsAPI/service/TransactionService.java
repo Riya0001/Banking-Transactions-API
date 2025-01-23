@@ -26,48 +26,87 @@ public class TransactionService {
     private final AccountRepository accountRepository;
 
     @Autowired
-    TransactionService(TransactionRepository transactionRepository, AccountRepository accountRepository) {
+    public TransactionService(TransactionRepository transactionRepository, AccountRepository accountRepository) {
         this.transactionRepository = transactionRepository;
         this.accountRepository = accountRepository;
     }
 
     @Transactional
-    public TransferFundsResponseDTO transferFunds( TransferFundsRequestDTO request) {
-        if (request.getAccountId().equals(request.getCounterAccountId())) {
-            throw new SameAccountTransferException("Sender and receiver account id cannot be the same.");
+    public TransferFundsResponseDTO transferFunds(TransferFundsRequestDTO request) {
+        // Check if sender and receiver emails are the same
+        if (request.getSenderEmail().equalsIgnoreCase(request.getReceiverEmail())) {
+            throw new SameAccountTransferException("Sender and receiver email cannot be the same.");
         }
-        Account senderAccount = accountRepository.findAccountById(request.getAccountId())
-                .orElseThrow(() -> new AccountNotFoundException("Account not found for account id: " + request.getAccountId()));
-        BigDecimal amount = request.getAmount();
-        if (senderAccount.getBalance().subtract(amount).compareTo(BigDecimal.ZERO) < 0) {
+
+        // Retrieve sender and receiver accounts
+        Account senderAccount = accountRepository.findByEmail(request.getSenderEmail())
+                .orElseThrow(() -> new AccountNotFoundException("Sender account not found for email: " + request.getSenderEmail()));
+
+        Account receiverAccount = accountRepository.findByEmail(request.getReceiverEmail())
+                .orElseThrow(() -> new AccountNotFoundException("Receiver account not found for email: " + request.getReceiverEmail()));
+
+        BigDecimal transferAmount = request.getAmount();
+
+        // Check for sufficient balance in sender's account
+        if (senderAccount.getInitialBalance().compareTo(transferAmount) < 0) {
             throw new InsufficientBalanceException("Insufficient balance to complete the transaction.");
         }
-        Account receiverAccount = accountRepository.findAccountById(request.getCounterAccountId())
-                .orElseThrow(() -> new AccountNotFoundException("Account not found for Account id: " + request.getCounterAccountId()));
 
-        senderAccount.setBalance(senderAccount.getBalance().subtract(amount));
+        // Perform debit and credit operations
+        senderAccount.setInitialBalance(senderAccount.getInitialBalance().subtract(transferAmount));
         senderAccount.setUpdatedAt(LocalDateTime.now());
         accountRepository.save(senderAccount);
 
-        receiverAccount.setBalance(receiverAccount.getBalance().add(amount));
+        receiverAccount.setInitialBalance(receiverAccount.getInitialBalance().add(transferAmount));
         receiverAccount.setUpdatedAt(LocalDateTime.now());
         accountRepository.save(receiverAccount);
+
+        // Generate a unique transaction ID
         UUID transactionId = UUID.randomUUID();
-        transactionRepository.save(new Transaction(senderAccount.getId(), receiverAccount.getId(), TransactionType.WITHDRAW, amount, transactionId, senderAccount.getBalance()));
-        transactionRepository.save(new Transaction(receiverAccount.getId(), senderAccount.getId(), TransactionType.DEPOSIT, amount, transactionId, receiverAccount.getBalance()));
+
+        // Save sender's transaction record (withdrawal)
+        transactionRepository.save(new Transaction(
+                senderAccount.getId(),
+                senderAccount.getEmail(),
+                receiverAccount.getEmail(),
+                TransactionType.WITHDRAWAL,
+                transferAmount,
+                transactionId,
+                senderAccount.getInitialBalance(),
+                receiverAccount.getInitialBalance(),
+                "SUCCESS",
+                "Transfer to " + receiverAccount.getEmail()
+        ));
+
+        // Save receiver's transaction record (deposit)
+        transactionRepository.save(new Transaction(
+                receiverAccount.getId(),
+                receiverAccount.getEmail(),
+                senderAccount.getEmail(),
+                TransactionType.DEPOSIT,
+                transferAmount,
+                transactionId,
+                receiverAccount.getInitialBalance(),
+                senderAccount.getInitialBalance(),
+                "SUCCESS",
+                "Received from " + senderAccount.getEmail()
+        ));
+
+        // Build and return response DTO
         return TransferFundsResponseDTO.builder()
                 .transactionId(transactionId)
-                .amount(request.getAmount())
-                .accountId(senderAccount.getId())
-                .counterAccountId(receiverAccount.getId())
-                .updatedBalance(senderAccount.getBalance())
+                .amount(transferAmount)
+                .senderEmail(senderAccount.getEmail())
+                .receiverEmail(receiverAccount.getEmail())
+                .senderBalance(senderAccount.getInitialBalance())
+                .receiverBalance(receiverAccount.getInitialBalance())
+                .status("SUCCESS")
+                .message("Transfer to " + receiverAccount.getEmail() + " successfully")
                 .build();
     }
 
     @Transactional(readOnly = true)
-    public List<Transaction> getTransactionHistory(Long accountId) {
-        accountRepository.findAccountById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException("Account not found for account id: " + accountId));
-        return transactionRepository.findByAccountId(accountId, Sort.by(Sort.Direction.DESC, "transactionTime"));
+    public List<Transaction> getTransactionHistory(Long id) {
+        return transactionRepository.findByAccountId(id);
     }
 }

@@ -2,6 +2,7 @@ package com.riya.bankingtransactionsAPI.service;
 
 import com.riya.bankingtransactionsAPI.dto.CreateAccountRequestDTO;
 import com.riya.bankingtransactionsAPI.dto.CreateAccountResponseDTO;
+import com.riya.bankingtransactionsAPI.exception.AccountAlreadyExistsException;
 import com.riya.bankingtransactionsAPI.model.Account;
 import com.riya.bankingtransactionsAPI.repository.AccountRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -13,21 +14,39 @@ public class AccountService {
     private final AccountRepository accountRepository;
 
     @Autowired
-    AccountService(AccountRepository accountRepository) {
+    public AccountService(AccountRepository accountRepository) {
         this.accountRepository = accountRepository;
     }
 
     @Transactional
-    public CreateAccountResponseDTO createAccount( CreateAccountRequestDTO request) {
-        Account account = new Account(request.getEmail(), request.getBalance(), request.getCurrencyCode(), request.getAccountHolderName());
+    public CreateAccountResponseDTO createAccount(CreateAccountRequestDTO request) {
+        if (accountRepository.findByEmail(request.getEmail()).isPresent()) {
+            throw new AccountAlreadyExistsException("Account already exists for email: " + request.getEmail());
+        }
+        // Creating a new Account entity from the request DTO
+        Account account = new Account(
+                request.getAccountHolderName(),
+                request.getDateOfBirth(),
+                request.getEmail(),
+                request.getPhoneNumber(),
+                request.getAccountType(),
+                request.getInitialBalance(),
+                "USD"  // Default currency or fetch dynamically based on business logic
+        );
+
+        // Saving account to database
         Account dbAccount = accountRepository.save(account);
+
+        // Building response DTO from the saved entity
         return CreateAccountResponseDTO.builder()
                 .id(dbAccount.getId())
-                .email(dbAccount.getEmail())
-                .balance(dbAccount.getBalance())
-                .currency(dbAccount.getCurrency())
                 .accountHolderName(dbAccount.getAccountHolderName())
+                .dateOfBirth(dbAccount.getDateOfBirth())
+                .email(dbAccount.getEmail())
+                .phoneNumber(dbAccount.getPhoneNumber())
+                .accountType(dbAccount.getAccountType())
+                .balance(dbAccount.getInitialBalance())  // Use the correct field name
                 .build();
     }
-
 }
+

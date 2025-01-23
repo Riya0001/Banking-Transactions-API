@@ -13,19 +13,14 @@ import java.util.UUID;
 @Getter
 @Setter
 public class TransactionHistoryResponseDTO {
-    UUID transactionId;
-    Long counterAccountId;
-    BigDecimal amount;
-    BigDecimal updatedBalance;
-    TransactionType transactionType;
-    LocalDateTime timeStamp;
-
-    public TransactionHistoryResponseDTO(UUID transactionId, Long counterAccountId, BigDecimal amount, BigDecimal updatedBalance, TransactionType transactionType, LocalDateTime timeStamp) {
-        this.transactionId = transactionId;
-        this.amount = amount;
-        this.updatedBalance = updatedBalance;
-        this.transactionType = transactionType;
-        this.timeStamp = timeStamp;
-        this.counterAccountId = counterAccountId;
-    }
+    private UUID transactionId;
+    private String senderEmail;
+    private String receiverEmail;
+    private BigDecimal amount;
+    private BigDecimal senderBalance;
+    private BigDecimal receiverBalance;
+    private TransactionType transactionType;
+    private LocalDateTime timeStamp;
+    private String status;
+    private String remarks;
 }

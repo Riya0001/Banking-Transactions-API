@@ -10,10 +10,10 @@ import java.math.BigDecimal;
 public class TransferFundsRequestDTO {
 
     @NotNull(message = "Source Account Id is required")
-    private Long accountId;
+    private String senderEmail;
 
     @NotNull(message = "Destination Account Id is required")
-    private Long counterAccountId;
+    private String receiverEmail;
 
     @NotNull(message = "Amount cannot be empty")
     @DecimalMin(value = "1", message = "Amount must be greater than 1")

@@ -15,8 +15,7 @@ public class TransferFundsResponseDTO {
     private String receiverEmail;
     private BigDecimal amount;
     private UUID transactionId;
-    private BigDecimal senderBalance;
-    private BigDecimal receiverBalance;
+    private BigDecimal updatedBalance;
     private String status;
     private String message;
 }

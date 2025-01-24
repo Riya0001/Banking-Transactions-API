@@ -34,11 +34,9 @@ public class Transaction {
     @Column(name = "amount", nullable = false)
     private BigDecimal amount;
 
-    @Column(name = "sender_balance", nullable = false)
-    private BigDecimal senderBalance;  // Sender's balance after transaction
+    @Column(name = "updated balance", nullable = false)
+    private BigDecimal updatedBalance;  // Sender's balance after transaction
 
-    @Column(name = "receiver_balance", nullable = false)
-    private BigDecimal receiverBalance;  // Receiver's balance after transaction
 
     @Enumerated(EnumType.STRING)
     @Column(name = "transaction_type", nullable = false)
@@ -63,8 +61,7 @@ public class Transaction {
         this.senderEmail = senderEmail;
         this.receiverEmail = receiverEmail;
         this.amount = amount;
-        this.senderBalance = senderBalance;
-        this.receiverBalance = receiverBalance;
+        this.updatedBalance = senderBalance;
         this.transactionType = transactionType;
         this.transactionId = (transactionId != null) ? transactionId : UUID.randomUUID();
         this.transactionTime = LocalDateTime.now();

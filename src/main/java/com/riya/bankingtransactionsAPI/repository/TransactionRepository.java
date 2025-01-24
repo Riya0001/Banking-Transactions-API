@@ -10,5 +10,5 @@ import java.util.UUID;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction,Long> {
-    List<Transaction> findByAccountId(Long accountId);
+    List<Transaction> findByAccountId(Long accountId, Sort transactionTime);
 }

@@ -98,8 +98,7 @@ public class TransactionService {
                 .amount(transferAmount)
                 .senderEmail(senderAccount.getEmail())
                 .receiverEmail(receiverAccount.getEmail())
-                .senderBalance(senderAccount.getInitialBalance())
-                .receiverBalance(receiverAccount.getInitialBalance())
+                .updatedBalance(senderAccount.getInitialBalance())
                 .status("SUCCESS")
                 .message("Transfer to " + receiverAccount.getEmail() + " successfully")
                 .build();
@@ -107,6 +106,6 @@ public class TransactionService {
 
     @Transactional(readOnly = true)
     public List<Transaction> getTransactionHistory(Long id) {
-        return transactionRepository.findByAccountId(id);
+        return transactionRepository.findByAccountId(id, Sort.by(Sort.Direction.DESC, "transactionTime"));
     }
 }

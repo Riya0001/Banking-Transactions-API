@@ -17,10 +17,9 @@ public class TransactionHistoryResponseDTO {
     private String senderEmail;
     private String receiverEmail;
     private BigDecimal amount;
-    private BigDecimal senderBalance;
-    private BigDecimal receiverBalance;
+    private BigDecimal updatedBalance;
     private TransactionType transactionType;
-    private LocalDateTime timeStamp;
+    private LocalDateTime transactionTime;
     private String status;
     private String remarks;
 }

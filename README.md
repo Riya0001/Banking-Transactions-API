@@ -44,6 +44,7 @@ Run the BankingapiApplication.java file. The application will run on http://loca
 
 **Assumptions for APIs**
 - The age of the user should be more than 18 to create an account.
+- The date format here is YYYY-MM-DD.
 - initial balance should be greater than 1
 - two users cant have same email id
 - Transfer funds can't be done from with same source and destination

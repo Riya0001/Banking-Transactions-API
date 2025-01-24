@@ -37,7 +37,7 @@ Run the BankingapiApplication.java file. The application will run on http://loca
     "receiverEmail":"ron7@gmail.com",
     "amount":16
 
-- /transactions/history
+- /transactions/history/{accountID}
   - View transactions history
   - Input (POST):
       - (Mandatory) accountId

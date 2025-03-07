@@ -41,7 +41,6 @@ public class GlobalExceptionHandler {
         return errors;
     }
 
-
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleParsingExceptions(HttpMessageNotReadableException ex) {
         String errorMessage = "Malformed JSON request";

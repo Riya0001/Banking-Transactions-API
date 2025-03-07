@@ -20,9 +20,11 @@ public class AccountService {
 
     @Transactional
     public CreateAccountResponseDTO createAccount(CreateAccountRequestDTO request) {
+        // Check if an account with the same email already exists
         if (accountRepository.findByEmail(request.getEmail()).isPresent()) {
             throw new AccountAlreadyExistsException("Account already exists for email: " + request.getEmail());
         }
+
         // Creating a new Account entity from the request DTO
         Account account = new Account(
                 request.getAccountHolderName(),
@@ -30,8 +32,7 @@ public class AccountService {
                 request.getEmail(),
                 request.getPhoneNumber(),
                 request.getAccountType(),
-                request.getInitialBalance(),
-                "USD"  // Default currency or fetch dynamically based on business logic
+                request.getInitialBalance()
         );
 
         // Saving account to database
@@ -49,4 +50,3 @@ public class AccountService {
                 .build();
     }
 }
-

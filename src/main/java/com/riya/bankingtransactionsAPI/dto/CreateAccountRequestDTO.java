@@ -1,19 +1,15 @@
 package com.riya.bankingtransactionsAPI.dto;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Past;
-import jakarta.validation.constraints.Pattern;
-import jakarta.validation.constraints.AssertTrue;
+import jakarta.validation.constraints.*;
 import lombok.Getter;
+import lombok.Setter;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Period;
 
 @Getter
+@Setter
 public class CreateAccountRequestDTO {
 
     @NotEmpty(message = "Account Holder name cannot be empty")
@@ -32,14 +28,6 @@ public class CreateAccountRequestDTO {
     @Pattern(regexp = "^[0-9]{10,15}$", message = "Invalid phone number format")
     private String phoneNumber;
 
-    @AssertTrue(message = "User must be at least 18 years old")
-    public boolean isAdult() {
-        if (dateOfBirth == null) {
-            return false;
-        }
-        return Period.between(dateOfBirth, LocalDate.now()).getYears() >= 18;
-    }
-
     @NotEmpty(message = "Account type is required")
     @Pattern(regexp = "^(SAVINGS|CURRENT|BUSINESS|JOINT)$", message = "Invalid account type")
     private String accountType;
@@ -48,4 +36,12 @@ public class CreateAccountRequestDTO {
     @DecimalMin(value = "1", message = "Balance must be greater than 1")
     private BigDecimal initialBalance;
 
+    // Age validation method
+    @AssertTrue(message = "User must be at least 18 years old")
+    public boolean isAdult() {
+        if (dateOfBirth == null) {
+            return false;
+        }
+        return Period.between(dateOfBirth, LocalDate.now()).getYears() >= 18;
+    }
 }

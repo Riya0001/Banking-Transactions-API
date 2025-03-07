@@ -8,27 +8,27 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import static com.riya.bankingtransactionsAPI.constants.AccountApi.CREATE_ACCOUNT_URL;
 
-
 @RestController
 @Validated
+@RequestMapping("/api/account") // Base URL for account APIs
 public class AccountController {
 
     private final AccountService accountService;
 
     @Autowired
-    AccountController(AccountService accountService){
+    public AccountController(AccountService accountService){
         this.accountService = accountService;
     }
-    @PostMapping(CREATE_ACCOUNT_URL)
-    public ResponseEntity<CreateAccountResponseDTO> createAccount(@Valid @RequestBody CreateAccountRequestDTO request) {
-        CreateAccountResponseDTO response =  accountService.createAccount(request);
+
+    @PostMapping("/create")
+    public ResponseEntity<CreateAccountResponseDTO> createAccount(
+            @Valid @RequestBody CreateAccountRequestDTO request) {
+
+        CreateAccountResponseDTO response = accountService.createAccount(request);
         return new ResponseEntity<>(response, HttpStatus.CREATED);
     }
-
 }

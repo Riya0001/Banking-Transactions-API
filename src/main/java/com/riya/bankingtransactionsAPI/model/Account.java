@@ -1,11 +1,9 @@
 package com.riya.bankingtransactionsAPI.model;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -14,12 +12,11 @@ import java.time.LocalDateTime;
 @Getter
 @Setter
 @NoArgsConstructor
-@Table(name = "accounts")
+@Table(name = "accounts", uniqueConstraints = {@UniqueConstraint(columnNames = "email")})
 public class Account {
 
     @Id
-    @SequenceGenerator(name = "account_id_sequence", sequenceName = "account_id_sequence", allocationSize = 1)
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "account_id_sequence")
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "account_holder_name", nullable = false)
@@ -28,8 +25,8 @@ public class Account {
     @Column(name = "date_of_birth", nullable = false)
     private LocalDate dateOfBirth;
 
-    @Column(name = "email", nullable = false)
-    private String email;  // Same email can have multiple accounts
+    @Column(name = "email", nullable = false, unique = true)
+    private String email;
 
     @Column(name = "phone_number", nullable = false)
     private String phoneNumber;
@@ -37,7 +34,7 @@ public class Account {
     @Column(name = "account_type", nullable = false)
     private String accountType;
 
-    @Column(name = "initialbalance", nullable = false)
+    @Column(name = "initial_balance", nullable = false)
     private BigDecimal initialBalance;
 
     @Column(name = "is_active", nullable = false)
@@ -49,8 +46,9 @@ public class Account {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    // ✅ Constructor (Inside the Class)
     public Account(String accountHolderName, LocalDate dateOfBirth, String email, String phoneNumber,
-                   String accountType, BigDecimal initialBalance, String currency) {
+                   String accountType, BigDecimal initialBalance) {
         this.accountHolderName = accountHolderName;
         this.dateOfBirth = dateOfBirth;
         this.email = email;
@@ -62,13 +60,10 @@ public class Account {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public Account(@NotEmpty(message = "Account Holder name cannot be empty") String accountHolderName, @NotNull(message = "Date of birth is required") @Past(message = "Date of birth must be in the past") LocalDate dateOfBirth, @NotEmpty(message = "Email cannot be empty") @Email(message = "Invalid email format") String email, @NotEmpty(message = "Phone number cannot be empty") @Pattern(regexp = "^[0-9]{10,15}$", message = "Invalid phone number format") String phoneNumber, @NotEmpty(message = "Account type is required") @Pattern(regexp = "^(SAVINGS|CURRENT|BUSINESS|JOINT)$", message = "Invalid account type") String accountType, @NotNull(message = "Balance cannot be empty") @DecimalMin(value = "1", message = "Balance must be greater than 1") BigDecimal initialBalance) {
-    }
-
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
-        updatedAt = LocalDateTime.now();
+        updatedAt = createdAt;
     }
 
     @PreUpdate

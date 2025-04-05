@@ -17,5 +17,5 @@ public class CreateAccountResponseDTO {
     private String email;             // Email associated with the account
     private String phoneNumber;       // Contact number of the account holder
     private String accountType;       // Type of account created (SAVINGS, CURRENT, etc.)
-    private BigDecimal balance;       // Account balance after creation
+    private BigDecimal initialBalance;       // Account balance after creation
 }

@@ -33,79 +33,73 @@ public class TransactionService {
 
     @Transactional
     public TransferFundsResponseDTO transferFunds(TransferFundsRequestDTO request) {
-        // Check if sender and receiver emails are the same
-        if (request.getSenderEmail().equalsIgnoreCase(request.getReceiverEmail())) {
+        // ✅ 1. Check if sender account exists (First priority)
+        Account sender = accountRepository.findByEmail(request.getSenderEmail())
+                .orElseThrow(() -> new AccountNotFoundException("Sender account does not exist."));
+
+        // ✅ 2. Check if receiver account exists (Second priority)
+        Account receiver = accountRepository.findByEmail(request.getReceiverEmail())
+                .orElseThrow(() -> new AccountNotFoundException("Receiver account does not exist."));
+
+        // ✅ 3. Prevent sender and receiver from being the same (Third priority)
+        if (sender.getEmail().equalsIgnoreCase(receiver.getEmail())) {
             throw new SameAccountTransferException("Sender and receiver email cannot be the same.");
         }
 
-        // Retrieve sender and receiver accounts
-        Account senderAccount = accountRepository.findByEmail(request.getSenderEmail())
-                .orElseThrow(() -> new AccountNotFoundException("Sender account not found for email: " + request.getSenderEmail()));
-
-        Account receiverAccount = accountRepository.findByEmail(request.getReceiverEmail())
-                .orElseThrow(() -> new AccountNotFoundException("Receiver account not found for email: " + request.getReceiverEmail()));
-
+        // ✅ 4. Validate sender's balance (Fourth priority)
         BigDecimal transferAmount = request.getAmount();
-
-        // Check for sufficient balance in sender's account
-        if (senderAccount.getInitialBalance().compareTo(transferAmount) < 0) {
+        if (sender.getInitialBalance().compareTo(transferAmount) < 0) {
             throw new InsufficientBalanceException("Insufficient balance to complete the transaction.");
         }
 
-        // Perform debit and credit operations
-        senderAccount.setInitialBalance(senderAccount.getInitialBalance().subtract(transferAmount));
-        senderAccount.setUpdatedAt(LocalDateTime.now());
-        accountRepository.save(senderAccount);
+        // ✅ 5. Perform transaction updates atomically
+        sender.setInitialBalance(sender.getInitialBalance().subtract(transferAmount));
+        receiver.setInitialBalance(receiver.getInitialBalance().add(transferAmount));
 
-        receiverAccount.setInitialBalance(receiverAccount.getInitialBalance().add(transferAmount));
-        receiverAccount.setUpdatedAt(LocalDateTime.now());
-        accountRepository.save(receiverAccount);
+        LocalDateTime now = LocalDateTime.now();
+        sender.setUpdatedAt(now);
+        receiver.setUpdatedAt(now);
 
-        // Generate a unique transaction ID
+        accountRepository.save(sender);
+        accountRepository.save(receiver);
+
+        // ✅ 6. Generate transaction ID
         UUID transactionId = UUID.randomUUID();
 
-        // Save sender's transaction record (withdrawal)
-        transactionRepository.save(new Transaction(
-                senderAccount.getId(),
-                senderAccount.getEmail(),
-                receiverAccount.getEmail(),
-                TransactionType.WITHDRAWAL,
-                transferAmount,
-                transactionId,
-                senderAccount.getInitialBalance(),
-                receiverAccount.getInitialBalance(),
-                "SUCCESS",
-                "Transfer to " + receiverAccount.getEmail()
-        ));
+        // ✅ 7. Save transaction records
+        saveTransaction(sender, receiver, transferAmount, transactionId, TransactionType.WITHDRAWAL, "Transfer to " + receiver.getEmail());
+        saveTransaction(receiver, sender, transferAmount, transactionId, TransactionType.DEPOSIT, "Received from " + sender.getEmail());
 
-        // Save receiver's transaction record (deposit)
-        transactionRepository.save(new Transaction(
-                receiverAccount.getId(),
-                receiverAccount.getEmail(),
-                senderAccount.getEmail(),
-                TransactionType.DEPOSIT,
-                transferAmount,
-                transactionId,
-                receiverAccount.getInitialBalance(),
-                senderAccount.getInitialBalance(),
-                "SUCCESS",
-                "Received from " + senderAccount.getEmail()
-        ));
-
-        // Build and return response DTO
+        // ✅ 8. Return response
         return TransferFundsResponseDTO.builder()
                 .transactionId(transactionId)
                 .amount(transferAmount)
-                .senderEmail(senderAccount.getEmail())
-                .receiverEmail(receiverAccount.getEmail())
-                .updatedBalance(senderAccount.getInitialBalance())
+                .senderEmail(sender.getEmail())
+                .receiverEmail(receiver.getEmail())
+                .updatedBalance(sender.getInitialBalance())
                 .status("SUCCESS")
-                .message("Transfer to " + receiverAccount.getEmail() + " successfully")
+                .message("Transfer to " + receiver.getEmail() + " successfully")
                 .build();
     }
 
     @Transactional(readOnly = true)
-    public List<Transaction> getTransactionHistory(Long id) {
-        return transactionRepository.findByAccountId(id, Sort.by(Sort.Direction.DESC, "transactionTime"));
+    public List<Transaction> getTransactionHistory(Long accountId) {
+        return transactionRepository.findByAccountId(accountId, Sort.by(Sort.Direction.DESC, "transactionTime"));
+    }
+
+    private void saveTransaction(Account sender, Account receiver, BigDecimal amount, UUID transactionId,
+                                 TransactionType type, String description) {
+        transactionRepository.save(new Transaction(
+                sender.getId(),
+                sender.getEmail(),
+                receiver.getEmail(),
+                type,
+                amount,
+                transactionId,
+                sender.getInitialBalance(),  // Stores updated balance
+                receiver.getInitialBalance(),
+                "SUCCESS",
+                description
+        ));
     }
 }

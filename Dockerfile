@@ -5,10 +5,10 @@ FROM openjdk:17-jdk-slim
 WORKDIR /app
 
 # Copy the application JAR file
-COPY target/*.jar app.jar
+COPY target/bankingtransactionAPI-0.0.1-SNAPSHOT.jar app.jar
 
 # Expose the application's port
-EXPOSE 8080
+EXPOSE 9902
 
 # Command to run the application
 ENTRYPOINT ["java", "-jar", "app.jar"]

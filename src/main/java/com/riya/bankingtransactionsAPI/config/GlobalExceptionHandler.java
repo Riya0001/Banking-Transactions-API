@@ -29,17 +29,20 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseBody
-    public Map<String, String> handleValidationExceptions(MethodArgumentNotValidException ex) {
+    public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {
         Map<String, String> errors = new HashMap<>();
 
         ex.getBindingResult().getAllErrors().forEach((error) -> {
             String fieldName = ((FieldError) error).getField();
             String errorMessage = error.getDefaultMessage();
-            errors.put(fieldName, errorMessage);
+
+            // ✅ Convert field name to a structured key (e.g., "initialBalanceError" instead of "initialBalance")
+            errors.put(fieldName + "Error", errorMessage);
         });
 
-        return errors;
+        return ResponseEntity.badRequest().body(errors); // ✅ Properly returning ResponseEntity
     }
+
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleParsingExceptions(HttpMessageNotReadableException ex) {
